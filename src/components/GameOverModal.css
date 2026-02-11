@@ -1,0 +1,68 @@
+.gameover-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  padding: 8px;
+}
+
+.gameover-emoji {
+  font-size: 36px;
+  letter-spacing: 8px;
+  color: #ccc;
+}
+
+.gameover-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #e74c3c;
+}
+
+.gameover-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--dark);
+}
+
+.gameover-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.gameover-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 3px solid var(--dark);
+  border-radius: 6px;
+  background: var(--cream);
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--dark);
+  transition: all 0.12s;
+}
+
+.gameover-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0px var(--dark);
+}
+
+.gameover-btn:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0px var(--dark);
+}
+
+.gameover-btn-retry {
+  background: var(--yellow);
+}
+
+.gameover-btn-new {
+  background: var(--orange);
+  color: white;
+}
+
+.gameover-btn-new:hover {
+  background: #e55a2b;
+}

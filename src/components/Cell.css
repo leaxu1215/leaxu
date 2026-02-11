@@ -1,0 +1,83 @@
+.cell {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dark);
+  background: var(--cream);
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+  font-size: clamp(16px, 3.5vw, 28px);
+}
+
+.cell:hover {
+  background: var(--cream-dark);
+}
+
+.cell-given {
+  background: #ede8df;
+}
+
+.cell-given .cell-value {
+  font-weight: 800;
+  color: var(--dark);
+}
+
+.cell-value {
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.cell-selected {
+  background: var(--yellow) !important;
+  box-shadow: inset 0 0 0 2px var(--orange);
+}
+
+.cell-highlighted {
+  background: #fef3d0 !important;
+}
+
+.cell-same-number {
+  background: #ffe4a0 !important;
+}
+
+.cell-error {
+  background: #ffd4d4 !important;
+}
+
+.cell-error .cell-value {
+  color: #d32f2f;
+}
+
+.cell-box-right {
+  border-right: 3px solid var(--dark);
+}
+
+.cell-box-bottom {
+  border-bottom: 3px solid var(--dark);
+}
+
+.cell-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+}
+
+.cell-notes span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(7px, 1.2vw, 11px);
+  font-weight: 600;
+  color: var(--blue);
+  line-height: 1;
+}
+
+.note-hidden {
+  visibility: hidden;
+}

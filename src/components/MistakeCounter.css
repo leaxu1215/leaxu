@@ -1,0 +1,24 @@
+.mistake-counter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 3px solid var(--dark);
+  border-radius: 6px;
+  background: var(--cream);
+  box-shadow: 2px 2px 0px var(--dark);
+}
+
+.heart {
+  font-size: 20px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.heart-full {
+  color: #e74c3c;
+}
+
+.heart-empty {
+  color: #ccc;
+  transform: scale(0.9);
+}
