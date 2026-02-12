@@ -44,7 +44,6 @@ export function getCandidates(board) {
       for (const [pr, pc] of getPeers(r, c)) {
         cands.delete(board[pr][pc]);
       }
-      // Also remove the value in same row/col (getPeers covers this but be safe)
       for (let i = 0; i < 9; i++) {
         cands.delete(board[r][i] === 0 ? 0 : board[r][i]);
         cands.delete(board[i][c] === 0 ? 0 : board[i][c]);
@@ -56,7 +55,7 @@ export function getCandidates(board) {
   return candidates;
 }
 
-// Technique 1: Naked Single — a cell has exactly 1 candidate
+// Technique 1: Naked Single
 function findNakedSingle(candidates) {
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
@@ -69,12 +68,10 @@ function findNakedSingle(candidates) {
   return null;
 }
 
-// Technique 2: Hidden Single — a number can only go in 1 cell within a unit
+// Technique 2: Hidden Single
 function findHiddenSingle(board, candidates) {
-  // Check rows
   for (let r = 0; r < 9; r++) {
     for (let num = 1; num <= 9; num++) {
-      // Skip if number already placed in this row
       if (board[r].includes(num)) continue;
       const positions = [];
       for (let c = 0; c < 9; c++) {
@@ -88,7 +85,6 @@ function findHiddenSingle(board, candidates) {
     }
   }
 
-  // Check columns
   for (let c = 0; c < 9; c++) {
     for (let num = 1; num <= 9; num++) {
       let found = false;
@@ -108,7 +104,6 @@ function findHiddenSingle(board, candidates) {
     }
   }
 
-  // Check boxes
   for (let boxR = 0; boxR < 3; boxR++) {
     for (let boxC = 0; boxC < 3; boxC++) {
       for (let num = 1; num <= 9; num++) {
@@ -134,13 +129,11 @@ function findHiddenSingle(board, candidates) {
   return null;
 }
 
-// Technique 3: Naked Pair — two cells in a unit with the same 2 candidates
-// Eliminates those 2 numbers from other cells in the unit
+// Technique 3: Naked Pair
 function applyNakedPairs(candidates) {
   let changed = false;
 
   function processUnit(cells) {
-    // Find cells with exactly 2 candidates
     const pairs = cells.filter(([r, c]) => candidates[r][c] && candidates[r][c].size === 2);
     for (let i = 0; i < pairs.length; i++) {
       for (let j = i + 1; j < pairs.length; j++) {
@@ -148,12 +141,10 @@ function applyNakedPairs(candidates) {
         const [r2, c2] = pairs[j];
         const set1 = candidates[r1][c1];
         const set2 = candidates[r2][c2];
-        // Check if they have the same 2 candidates
         if (set1.size === 2 && set2.size === 2) {
           const vals1 = [...set1];
           const vals2 = [...set2];
           if (vals1[0] === vals2[0] && vals1[1] === vals2[1]) {
-            // Remove these candidates from other cells in the unit
             for (const [r, c] of cells) {
               if ((r === r1 && c === c1) || (r === r2 && c === c2)) continue;
               if (!candidates[r][c]) continue;
@@ -170,7 +161,6 @@ function applyNakedPairs(candidates) {
     }
   }
 
-  // Process all rows, columns, boxes
   for (let r = 0; r < 9; r++) {
     const cells = [];
     for (let c = 0; c < 9; c++) cells.push([r, c]);
@@ -196,8 +186,7 @@ function applyNakedPairs(candidates) {
   return changed;
 }
 
-// Technique 4: Pointing Pair — if candidates for a number within a box
-// are confined to one row/col, eliminate from rest of that row/col
+// Technique 4: Pointing Pair
 function applyPointingPairs(candidates) {
   let changed = false;
 
@@ -214,12 +203,11 @@ function applyPointingPairs(candidates) {
         }
         if (positions.length < 2 || positions.length > 3) continue;
 
-        // Check if all in same row
         const allSameRow = positions.every(([r]) => r === positions[0][0]);
         if (allSameRow) {
           const row = positions[0][0];
           for (let c = 0; c < 9; c++) {
-            if (Math.floor(c / 3) === boxC) continue; // skip same box
+            if (Math.floor(c / 3) === boxC) continue;
             if (candidates[row][c] && candidates[row][c].has(num)) {
               candidates[row][c].delete(num);
               changed = true;
@@ -227,12 +215,11 @@ function applyPointingPairs(candidates) {
           }
         }
 
-        // Check if all in same col
         const allSameCol = positions.every(([, c]) => c === positions[0][1]);
         if (allSameCol) {
           const col = positions[0][1];
           for (let r = 0; r < 9; r++) {
-            if (Math.floor(r / 3) === boxR) continue; // skip same box
+            if (Math.floor(r / 3) === boxR) continue;
             if (candidates[r][col] && candidates[r][col].has(num)) {
               candidates[r][col].delete(num);
               changed = true;
@@ -246,12 +233,10 @@ function applyPointingPairs(candidates) {
   return changed;
 }
 
-// Technique 5: Box/Line Reduction — if candidates for a number in a row/col
-// are confined to one box, eliminate from rest of that box
+// Technique 5: Box/Line Reduction
 function applyBoxLineReduction(candidates) {
   let changed = false;
 
-  // Check rows
   for (let r = 0; r < 9; r++) {
     for (let num = 1; num <= 9; num++) {
       const positions = [];
@@ -277,7 +262,6 @@ function applyBoxLineReduction(candidates) {
     }
   }
 
-  // Check columns
   for (let c = 0; c < 9; c++) {
     for (let num = 1; num <= 9; num++) {
       const positions = [];
@@ -306,19 +290,12 @@ function applyBoxLineReduction(candidates) {
   return changed;
 }
 
-/**
- * Attempt to solve a puzzle using human techniques up to maxLevel.
- * @param {number[][]} board - 9x9 board (0 = empty)
- * @param {number} maxLevel - maximum technique level to use (1-5)
- * @returns {{ solved: boolean, highestLevel: number }}
- */
 export function solve(board, maxLevel = 5) {
   const b = board.map(row => [...row]);
   let highestLevel = 0;
-  let maxIterations = 500; // safety limit
+  let maxIterations = 500;
 
   while (maxIterations-- > 0) {
-    // Check if solved
     let emptyCells = 0;
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -331,7 +308,6 @@ export function solve(board, maxLevel = 5) {
 
     const candidates = getCandidates(b);
 
-    // Check for any cell with 0 candidates (invalid state)
     let invalid = false;
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -342,7 +318,6 @@ export function solve(board, maxLevel = 5) {
     }
     if (invalid) return { solved: false, highestLevel };
 
-    // Try Level 1: Naked Single
     if (maxLevel >= LEVEL.NAKED_SINGLE) {
       const ns = findNakedSingle(candidates);
       if (ns) {
@@ -352,7 +327,6 @@ export function solve(board, maxLevel = 5) {
       }
     }
 
-    // Try Level 2: Hidden Single
     if (maxLevel >= LEVEL.HIDDEN_SINGLE) {
       const hs = findHiddenSingle(b, candidates);
       if (hs) {
@@ -362,13 +336,9 @@ export function solve(board, maxLevel = 5) {
       }
     }
 
-    // Try Level 3: Naked Pairs (elimination technique — doesn't place a number directly)
     if (maxLevel >= LEVEL.NAKED_PAIR) {
       if (applyNakedPairs(candidates)) {
         highestLevel = Math.max(highestLevel, LEVEL.NAKED_PAIR);
-        // After elimination, try placement techniques again
-        // Update the candidates in the board context
-        // We need to check if any naked single was created
         const ns = findNakedSingle(candidates);
         if (ns) {
           b[ns.row][ns.col] = ns.val;
@@ -382,7 +352,6 @@ export function solve(board, maxLevel = 5) {
       }
     }
 
-    // Try Level 4: Pointing Pairs
     if (maxLevel >= LEVEL.POINTING_PAIR) {
       if (applyPointingPairs(candidates)) {
         highestLevel = Math.max(highestLevel, LEVEL.POINTING_PAIR);
@@ -399,7 +368,6 @@ export function solve(board, maxLevel = 5) {
       }
     }
 
-    // Try Level 5: Box/Line Reduction
     if (maxLevel >= LEVEL.BOX_LINE) {
       if (applyBoxLineReduction(candidates)) {
         highestLevel = Math.max(highestLevel, LEVEL.BOX_LINE);
@@ -416,28 +384,21 @@ export function solve(board, maxLevel = 5) {
       }
     }
 
-    // No technique made progress — can't solve at this level
     return { solved: false, highestLevel };
   }
 
   return { solved: false, highestLevel };
 }
 
-// Box name helper for hint messages
 const boxNames = [
   ['top-left', 'top-center', 'top-right'],
   ['middle-left', 'center', 'middle-right'],
   ['bottom-left', 'bottom-center', 'bottom-right'],
 ];
 
-/**
- * Get a tutorial-style hint for the current board state.
- * Returns an explanation of the easiest next move.
- */
 export function getHint(board) {
   const candidates = getCandidates(board);
 
-  // Check for invalid state (cell with 0 candidates = player error)
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) {
       if (board[r][c] === 0 && candidates[r][c] && candidates[r][c].size === 0) {
@@ -451,10 +412,8 @@ export function getHint(board) {
     }
   }
 
-  // Try Naked Single
   const ns = findNakedSingle(candidates);
   if (ns) {
-    // Collect the cells that eliminate candidates (filled peers)
     const reasonCells = [];
     const peers = getPeers(ns.row, ns.col);
     for (const [pr, pc] of peers) {
@@ -472,19 +431,13 @@ export function getHint(board) {
     };
   }
 
-  // Try Hidden Single
   const hs = findHiddenSingleWithDetails(board, candidates);
-  if (hs) {
-    return hs;
-  }
+  if (hs) return hs;
 
-  // No technique found — fallback
   return null;
 }
 
-// Extended hidden single finder that returns hint details
 function findHiddenSingleWithDetails(board, candidates) {
-  // Check rows
   for (let r = 0; r < 9; r++) {
     for (let num = 1; num <= 9; num++) {
       if (board[r].includes(num)) continue;
@@ -496,7 +449,6 @@ function findHiddenSingleWithDetails(board, candidates) {
       }
       if (positions.length === 1) {
         const col = positions[0];
-        // Highlight other cells in the row that block this number
         const reasonCells = [];
         for (let c = 0; c < 9; c++) {
           if (c !== col && board[r][c] !== 0) {
@@ -513,7 +465,6 @@ function findHiddenSingleWithDetails(board, candidates) {
     }
   }
 
-  // Check columns
   for (let c = 0; c < 9; c++) {
     for (let num = 1; num <= 9; num++) {
       let found = false;
@@ -545,7 +496,6 @@ function findHiddenSingleWithDetails(board, candidates) {
     }
   }
 
-  // Check boxes
   for (let boxR = 0; boxR < 3; boxR++) {
     for (let boxC = 0; boxC < 3; boxC++) {
       for (let num = 1; num <= 9; num++) {

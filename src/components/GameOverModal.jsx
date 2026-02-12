@@ -1,4 +1,5 @@
 import Window from './Window'
+import CatFaceIcon from './CatFaceIcon'
 import './GameOverModal.css'
 
 export default function GameOverModal({ mistakes, onRetry, onNewGame }) {
@@ -6,7 +7,7 @@ export default function GameOverModal({ mistakes, onRetry, onNewGame }) {
     <div className="modal-overlay">
       <Window title="Game Over" color="#e74c3c">
         <div className="gameover-modal">
-          <div className="gameover-emoji">♡ ☹ ♡</div>
+          <div className="gameover-emoji">♡ <CatFaceIcon expression="sad" size={28} /> ♡</div>
           <h2 className="gameover-title">Game Over!</h2>
           <p className="gameover-text">You made {mistakes} mistakes.</p>
           <div className="gameover-buttons">

@@ -1,21 +1,21 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
-import Window from './components/Window'
-import Board from './components/Board'
-import NumberPad from './components/NumberPad'
-import Controls from './components/Controls'
-import Timer from './components/Timer'
-import MistakeCounter from './components/MistakeCounter'
-import DifficultyModal from './components/DifficultyModal'
-import WinModal from './components/WinModal'
-import GameOverModal from './components/GameOverModal'
-import HintPanel from './components/HintPanel'
-import CoinAnimation from './components/CoinAnimation'
-import WinCoinCelebration from './components/WinCoinCelebration'
-import PixelCat from './components/PixelCat'
-import { generatePuzzle, getConflicts } from './utils/generator'
-import { getHint } from './utils/solver'
-import { saveGame, loadGame, clearSave, hasSavedGame } from './utils/storage'
-import { playSound, toggleMute, isMuted } from './utils/sounds'
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, Dimensions, Pressable, ScrollView } from 'react-native';
+import Board from './components/Board';
+import NumberPad from './components/NumberPad';
+import Controls from './components/Controls';
+import Timer from './components/Timer';
+import MistakeCounter from './components/MistakeCounter';
+import DifficultyModal from './components/DifficultyModal';
+import WinModal from './components/WinModal';
+import GameOverModal from './components/GameOverModal';
+import HintPanel from './components/HintPanel';
+import CoinAnimation from './components/CoinAnimation';
+import WinCoinCelebration from './components/WinCoinCelebration';
+import PixelCat from './components/PixelCat';
+import { generatePuzzle, getConflicts } from './utils/generator';
+import { getHint } from './utils/solver';
+import { saveGame, loadGame, clearSave, hasSavedGame } from './utils/storage';
+import { playSound, toggleMute, isMuted, initSounds } from './utils/sounds';
 
 const MAX_MISTAKES = 3;
 
@@ -31,15 +31,8 @@ function cloneNotes(notes) {
 
 function clearRelatedNotes(notes, row, col, num) {
   const newNotes = cloneNotes(notes);
-  // Clear from same row
-  for (let c = 0; c < 9; c++) {
-    newNotes[row][c].delete(num);
-  }
-  // Clear from same column
-  for (let r = 0; r < 9; r++) {
-    newNotes[r][col].delete(num);
-  }
-  // Clear from same box
+  for (let c = 0; c < 9; c++) newNotes[row][c].delete(num);
+  for (let r = 0; r < 9; r++) newNotes[r][col].delete(num);
   const boxRow = Math.floor(row / 3) * 3;
   const boxCol = Math.floor(col / 3) * 3;
   for (let r = boxRow; r < boxRow + 3; r++) {
@@ -72,20 +65,34 @@ function initGame(difficulty = 'medium') {
 }
 
 export default function App() {
-  const [game, setGame] = useState(() => {
-    const saved = loadGame();
-    return saved || initGame('medium');
-  });
-  const [showDifficulty, setShowDifficulty] = useState(() => !loadGame());
+  const [game, setGame] = useState(() => initGame('medium'));
+  const [showDifficulty, setShowDifficulty] = useState(true);
   const [showWin, setShowWin] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [hint, setHint] = useState(null);
   const [coins, setCoins] = useState([]);
   const [catMood, setCatMood] = useState('idle');
-  const [muted, setMuted] = useState(() => isMuted());
+  const [muted, setMuted] = useState(false);
+  const [hasSave, setHasSave] = useState(false);
   const coinIdRef = useRef(0);
   const catMoodTimerRef = useRef(null);
   const saveTimerRef = useRef(null);
+
+  // Initialize sounds and check for saved game
+  useEffect(() => {
+    (async () => {
+      await initSounds();
+      setMuted(isMuted());
+      const saved = await hasSavedGame();
+      setHasSave(saved);
+      if (saved) {
+        const gameData = await loadGame();
+        if (gameData) {
+          setGame(gameData);
+        }
+      }
+    })();
+  }, []);
 
   // Save game state on changes (debounced)
   useEffect(() => {
@@ -118,18 +125,19 @@ export default function App() {
     return true;
   }, []);
 
-  const handleCellClick = useCallback((r, c) => {
+  const handleCellPress = useCallback((r, c) => {
     if (game.won || game.gameOver) return;
     playSound('click');
     setGame(g => ({ ...g, selectedCell: [r, c] }));
   }, [game.won, game.gameOver]);
 
   const spawnCoin = useCallback((row, col) => {
-    const cell = document.querySelector(`.board .cell:nth-child(${row * 9 + col + 1})`);
-    if (!cell) return;
-    const rect = cell.getBoundingClientRect();
+    const screenWidth = Dimensions.get('window').width;
+    const cellSize = Math.floor((screenWidth - 40) / 9);
+    const x = col * cellSize + 20 + cellSize / 2 - 14;
+    const y = row * cellSize + 100;
     const id = coinIdRef.current++;
-    setCoins(prev => [...prev, { id, x: rect.left + rect.width / 2 - 14, y: rect.top }]);
+    setCoins(prev => [...prev, { id, x, y }]);
     setTimeout(() => {
       setCoins(prev => prev.filter(c => c.id !== id));
     }, 900);
@@ -141,7 +149,6 @@ export default function App() {
     if (game.givenCells[r][c]) return;
     setHint(null);
 
-    // Spawn coin and cat reaction if correct (check before setGame)
     if (!game.notesMode && num === game.solution[r][c]) {
       playSound('coin');
       spawnCoin(r, c);
@@ -175,11 +182,9 @@ export default function App() {
         const newBoard = g.board.map(row => [...row]);
         newBoard[r][c] = num;
 
-        // Auto-clear related notes
         let newNotes = clearRelatedNotes(g.notes, r, c, num);
         newNotes[r][c] = new Set();
 
-        // Check for mistake
         const isCorrect = num === g.solution[r][c];
         const newMistakes = isCorrect ? g.mistakes : g.mistakes + 1;
         const isGameOver = newMistakes >= MAX_MISTAKES;
@@ -262,7 +267,6 @@ export default function App() {
   const handleHint = useCallback(() => {
     if (game.won || game.gameOver) return;
     playSound('hint');
-    // Get tutorial-style hint from solver
     const hintResult = getHint(game.board);
     if (hintResult) {
       setHint(hintResult);
@@ -270,7 +274,6 @@ export default function App() {
         setGame(g => ({ ...g, selectedCell: [hintResult.row, hintResult.col] }));
       }
     } else {
-      // Fallback: reveal a random cell from solution
       const candidates = [];
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
@@ -337,11 +340,13 @@ export default function App() {
   const handleSelectDifficulty = useCallback((difficulty) => {
     clearSave();
     setShowDifficulty(false);
+    setHasSave(false);
     setGame(initGame(difficulty));
+    setCatMood('idle');
   }, []);
 
-  const handleResume = useCallback(() => {
-    const saved = loadGame();
+  const handleResume = useCallback(async () => {
+    const saved = await loadGame();
     if (saved) {
       setGame(saved);
       setShowDifficulty(false);
@@ -350,6 +355,7 @@ export default function App() {
 
   const handleRetry = useCallback(() => {
     setShowGameOver(false);
+    setCatMood('idle');
     setGame(g => {
       const puzzle = g.solution.map((row, r) =>
         row.map((val, c) => g.givenCells[r][c] ? val : 0)
@@ -375,7 +381,7 @@ export default function App() {
     setGame(g => ({ ...g, seconds: g.seconds + 1 }));
   }, []);
 
-  // Win detection effect
+  // Win detection
   useEffect(() => {
     if (game.won && !showWin) {
       setShowWin(true);
@@ -384,7 +390,7 @@ export default function App() {
     }
   }, [game.won, showWin]);
 
-  // Game over detection effect
+  // Game over detection
   useEffect(() => {
     if (game.gameOver && !showGameOver) {
       setShowGameOver(true);
@@ -393,108 +399,79 @@ export default function App() {
     }
   }, [game.gameOver, showGameOver]);
 
-  // Keyboard support
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (showDifficulty || showWin || showGameOver) return;
-
-      const { selectedCell } = game;
-      if (!selectedCell) return;
-      const [r, c] = selectedCell;
-
-      if (e.key >= '1' && e.key <= '9') {
-        handleNumber(parseInt(e.key));
-      } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
-        handleErase();
-      } else if (e.key === 'ArrowUp' && r > 0) {
-        setGame(g => ({ ...g, selectedCell: [r - 1, c] }));
-      } else if (e.key === 'ArrowDown' && r < 8) {
-        setGame(g => ({ ...g, selectedCell: [r + 1, c] }));
-      } else if (e.key === 'ArrowLeft' && c > 0) {
-        setGame(g => ({ ...g, selectedCell: [r, c - 1] }));
-      } else if (e.key === 'ArrowRight' && c < 8) {
-        setGame(g => ({ ...g, selectedCell: [r, c + 1] }));
-      } else if (e.key === 'n' || e.key === 'N') {
-        handleToggleNotes();
-      } else if (e.ctrlKey && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-      } else if (e.ctrlKey && e.key === 'y') {
-        e.preventDefault();
-        handleRedo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [game, showDifficulty, showWin, showGameOver, handleNumber, handleErase, handleToggleNotes, handleUndo, handleRedo]);
+  const handleToggleMute = useCallback(async () => {
+    const newMuted = await toggleMute();
+    setMuted(newMuted);
+  }, []);
 
   return (
-    <div className="app">
-      <Window title="Catdoku" color="var(--orange)" className="app-main-window">
-        <div className="status-bar">
-          <span className={`difficulty-badge difficulty-${game.difficulty}`}>
-            {game.difficulty}
-          </span>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#c4b8a8" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Catdoku</Text>
+        </View>
+
+        {/* Status Bar */}
+        <View style={styles.statusBar}>
+          <View style={[styles.difficultyBadge, styles[`difficulty_${game.difficulty}`]]}>
+            <Text style={styles.difficultyText}>{game.difficulty.toUpperCase()}</Text>
+          </View>
           <MistakeCounter mistakes={game.mistakes} maxMistakes={MAX_MISTAKES} />
           <Timer seconds={game.seconds} isRunning={game.isRunning} onTick={handleTick} />
-          <button
-            className="mute-btn"
-            onClick={() => setMuted(toggleMute())}
-            title={muted ? 'Unmute' : 'Mute'}
-          >
-            {muted ? '🔇' : '🔊'}
-          </button>
-        </div>
+          <Pressable style={styles.muteBtn} onPress={handleToggleMute}>
+            <Text style={styles.muteBtnText}>{muted ? '🔇' : '🔊'}</Text>
+          </Pressable>
+        </View>
 
+        {/* Hint Panel */}
         {hint && (
           <HintPanel hint={hint} onDismiss={dismissHint} onApply={applyHint} />
         )}
 
-        <div className="game-layout" style={{ marginTop: 12 }}>
-          <div className="game-board-section">
-            <Board
-              board={game.board}
-              notes={game.notes}
-              givenCells={game.givenCells}
-              selectedCell={game.selectedCell}
-              conflicts={conflicts}
-              hint={hint}
-              onCellClick={handleCellClick}
-            />
-          </div>
+        {/* Board */}
+        <Board
+          board={game.board}
+          notes={game.notes}
+          givenCells={game.givenCells}
+          selectedCell={game.selectedCell}
+          conflicts={conflicts}
+          hint={hint}
+          onCellPress={handleCellPress}
+        />
 
-          <div className="game-sidebar">
-            <Window title="Numbers" color="var(--blue)">
-              <NumberPad
-                onNumber={handleNumber}
-                onErase={handleErase}
-                notesMode={game.notesMode}
-              />
-            </Window>
+        {/* Cat */}
+        <View style={styles.catContainer}>
+          <PixelCat mood={catMood} />
+        </View>
 
-            <Window title="Tools" color="var(--yellow)">
-              <Controls
-                notesMode={game.notesMode}
-                onToggleNotes={handleToggleNotes}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-                onHint={handleHint}
-                onNewGame={handleNewGame}
-                canUndo={game.history.length > 0}
-                canRedo={game.future.length > 0}
-              />
-            </Window>
-          </div>
-        </div>
-        <PixelCat mood={catMood} />
-      </Window>
+        {/* Number Pad */}
+        <NumberPad onNumber={handleNumber} onErase={handleErase} />
 
+        {/* Controls */}
+        <Controls
+          notesMode={game.notesMode}
+          onToggleNotes={handleToggleNotes}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onHint={handleHint}
+          onNewGame={handleNewGame}
+          canUndo={game.history.length > 0}
+          canRedo={game.future.length > 0}
+        />
+      </ScrollView>
+
+      {/* Modals */}
       {showDifficulty && (
         <DifficultyModal
           onSelect={handleSelectDifficulty}
           onClose={() => !game.won && !game.gameOver && setShowDifficulty(false)}
-          hasSave={hasSavedGame()}
+          hasSave={hasSave}
           onResume={handleResume}
         />
       )}
@@ -517,6 +494,74 @@ export default function App() {
 
       <CoinAnimation coins={coins} />
       <WinCoinCelebration active={showWin} />
-    </div>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#c4b8a8',
+  },
+  scrollContent: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 20,
+  },
+  header: {
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#2d2d2d',
+    letterSpacing: 1,
+  },
+  statusBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  difficultyBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 2,
+    borderColor: '#2d2d2d',
+    borderRadius: 12,
+  },
+  difficultyText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    color: '#2d2d2d',
+  },
+  difficulty_easy: {
+    backgroundColor: '#c8f7c5',
+  },
+  difficulty_medium: {
+    backgroundColor: '#ffd166',
+  },
+  difficulty_hard: {
+    backgroundColor: '#ffb4b4',
+  },
+  catContainer: {
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  muteBtn: {
+    borderWidth: 2,
+    borderColor: '#2d2d2d',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  muteBtnText: {
+    fontSize: 14,
+  },
+});

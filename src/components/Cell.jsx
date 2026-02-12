@@ -1,6 +1,6 @@
 import './Cell.css'
 
-export default function Cell({ value, notes, isGiven, isSelected, isHighlighted, isSameNumber, isError, row, col, onClick }) {
+export default function Cell({ value, notes, isGiven, isSelected, isHighlighted, isSameNumber, isError, isHintTarget, isHintReason, row, col, onClick }) {
   const classes = [
     'cell',
     isGiven && 'cell-given',
@@ -8,6 +8,8 @@ export default function Cell({ value, notes, isGiven, isSelected, isHighlighted,
     isHighlighted && 'cell-highlighted',
     isSameNumber && 'cell-same-number',
     isError && 'cell-error',
+    isHintTarget && 'cell-hint-target',
+    isHintReason && 'cell-hint-reason',
     col % 3 === 2 && col !== 8 && 'cell-box-right',
     row % 3 === 2 && row !== 8 && 'cell-box-bottom',
   ].filter(Boolean).join(' ');

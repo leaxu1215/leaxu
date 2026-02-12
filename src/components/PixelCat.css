@@ -1,0 +1,134 @@
+.pixel-cat-container {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  z-index: 10;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Reserve space: 18 cols * 5px = 90px wide, 15 rows * 5px = 75px tall */
+  width: 100px;
+  height: 90px;
+}
+
+.pixel-cat {
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  transform: scale(5);
+  transform-origin: top left;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+/* Speech bubble */
+.cat-bubble {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--dark);
+  animation: bubblePop 0.3s ease-out;
+  z-index: 11;
+}
+
+.cat-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--dark);
+}
+
+@keyframes bubblePop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5) translateY(4px);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
+}
+
+/* === Mood Animations === */
+
+/* Happy: bounce up and down */
+.cat-bounce {
+  animation: catBounce 0.4s ease-in-out 3;
+}
+
+@keyframes catBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Upset: enhanced shiver with squish */
+.cat-shiver {
+  animation: catShiver 0.08s linear infinite;
+}
+
+@keyframes catShiver {
+  0%, 100% { transform: translateX(0) scaleX(1); }
+  25% { transform: translateX(-3px) scaleX(0.97); }
+  75% { transform: translateX(3px) scaleX(0.97); }
+}
+
+/* Sleep: gentle breathing pulse */
+.cat-breathe {
+  animation: catBreathe 2s ease-in-out infinite;
+}
+
+@keyframes catBreathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.03); }
+}
+
+/* Celebrate: dance with rotation */
+.cat-dance {
+  animation: catDance 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes catDance {
+  0% { transform: translateY(0) rotate(-3deg); }
+  100% { transform: translateY(-8px) rotate(3deg); }
+}
+
+/* Scared: rapid tremble + shrink */
+.cat-tremble {
+  animation: catTremble 0.06s linear infinite;
+}
+
+@keyframes catTremble {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-1px, 1px) scale(0.98); }
+  50% { transform: translate(1px, -1px) scale(0.98); }
+  75% { transform: translate(-1px, 0) scale(0.99); }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .pixel-cat-container {
+    right: 50%;
+    transform: translateX(50%);
+    bottom: -8px;
+  }
+}

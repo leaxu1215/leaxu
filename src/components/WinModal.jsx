@@ -1,4 +1,5 @@
 import Window from './Window'
+import CatFaceIcon from './CatFaceIcon'
 import './WinModal.css'
 
 export default function WinModal({ time, onNewGame, onClose }) {
@@ -10,9 +11,9 @@ export default function WinModal({ time, onNewGame, onClose }) {
     <div className="modal-overlay">
       <Window title="You Win!" color="var(--yellow)">
         <div className="win-modal">
-          <div className="win-emoji">♥ ☺ ♥</div>
+          <div className="win-emoji">♥ <CatFaceIcon expression="love" size={28} /> ♥</div>
           <h2 className="win-title">Congratulations!</h2>
-          <p className="win-text">You solved the puzzle!</p>
+          <p className="win-text">You solved the puzzle! Meow!</p>
           <div className="win-time">
             <span>⏱ Time: {timeStr}</span>
           </div>

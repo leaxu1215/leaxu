@@ -1,10 +1,11 @@
 import Window from './Window'
+import CatFaceIcon from './CatFaceIcon'
 import './DifficultyModal.css'
 
 const difficulties = [
-  { key: 'easy', label: 'Easy', emoji: '☺', desc: 'Perfect for beginners' },
-  { key: 'medium', label: 'Medium', emoji: '☻', desc: 'A nice challenge' },
-  { key: 'hard', label: 'Hard', emoji: '♨', desc: 'For experts only!' },
+  { key: 'easy', label: 'Easy', expression: 'happy', desc: 'Purrfect for beginners' },
+  { key: 'medium', label: 'Medium', expression: 'wink', desc: 'A nice cat-llenge' },
+  { key: 'hard', label: 'Hard', expression: 'scared', desc: 'For top cats only!' },
 ];
 
 export default function DifficultyModal({ onSelect, onClose, hasSave, onResume }) {
@@ -23,7 +24,7 @@ export default function DifficultyModal({ onSelect, onClose, hasSave, onResume }
           <div className="difficulty-options">
             {difficulties.map(d => (
               <button key={d.key} className="difficulty-btn" onClick={() => onSelect(d.key)}>
-                <span className="difficulty-emoji">{d.emoji}</span>
+                <span className="difficulty-emoji"><CatFaceIcon expression={d.expression} size={24} /></span>
                 <span className="difficulty-label">{d.label}</span>
                 <span className="difficulty-desc">{d.desc}</span>
               </button>

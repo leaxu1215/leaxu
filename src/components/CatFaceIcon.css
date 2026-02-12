@@ -1,0 +1,19 @@
+.cat-face-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.cat-face-pixel {
+  display: block;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  transform-origin: top left;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
