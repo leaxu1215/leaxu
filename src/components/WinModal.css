@@ -5,6 +5,8 @@
   gap: 10px;
   min-width: 260px;
   padding: 8px;
+  position: relative;
+  z-index: 300;
 }
 
 .win-emoji {

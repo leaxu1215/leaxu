@@ -8,7 +8,7 @@ export default function WinModal({ time, onNewGame, onClose }) {
   const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" style={{ zIndex: 300 }}>
       <Window title="You Win!" color="var(--yellow)">
         <div className="win-modal">
           <div className="win-emoji">♥ <CatFaceIcon expression="love" size={28} /> ♥</div>

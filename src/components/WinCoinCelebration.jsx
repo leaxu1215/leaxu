@@ -9,8 +9,8 @@ export default function WinCoinCelebration({ active }) {
     return Array.from({ length: 30 }, (_, i) => ({
       id: i,
       startX: Math.random() * 100,       // % from left
-      startY: -10 - Math.random() * 30,   // above viewport
-      delay: Math.random() * 0.8,         // stagger entry
+      startY: Math.random() * 80,         // distributed across viewport
+      delay: Math.random() * 0.3,         // stagger entry
       wobble: (Math.random() - 0.5) * 40, // horizontal drift
       size: 20 + Math.random() * 16,      // varied sizes
     }));
@@ -21,11 +21,9 @@ export default function WinCoinCelebration({ active }) {
       setPhase('idle');
       return;
     }
-    setPhase('shower');
-    const collectTimer = setTimeout(() => setPhase('collect'), 1400);
-    const doneTimer = setTimeout(() => setPhase('done'), 2800);
+    setPhase('collect');
+    const doneTimer = setTimeout(() => setPhase('done'), 1400);
     return () => {
-      clearTimeout(collectTimer);
       clearTimeout(doneTimer);
     };
   }, [active]);
@@ -41,7 +39,7 @@ export default function WinCoinCelebration({ active }) {
       {phase !== 'done' && coins.map(coin => (
         <div
           key={coin.id}
-          className={`win-coin ${phase === 'collect' ? 'win-coin-collect' : 'win-coin-fall'}`}
+          className="win-coin win-coin-collect"
           style={{
             '--start-x': `${coin.startX}vw`,
             '--start-y': `${coin.startY}vh`,

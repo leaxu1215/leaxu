@@ -331,7 +331,7 @@ export default function App() {
     setShowWin(false);
     setShowGameOver(false);
     setShowDifficulty(true);
-    setGame(g => ({ ...g, isRunning: false }));
+    setGame(g => ({ ...g, won: false, isRunning: false }));
   }, []);
 
   const handleSelectDifficulty = useCallback((difficulty) => {
@@ -503,7 +503,10 @@ export default function App() {
         <WinModal
           time={game.seconds}
           onNewGame={handleNewGame}
-          onClose={() => setShowWin(false)}
+          onClose={() => {
+            setShowWin(false);
+            setGame(g => ({ ...g, won: false }));
+          }}
         />
       )}
 
